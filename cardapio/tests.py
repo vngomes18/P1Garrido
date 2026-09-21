@@ -1,3 +1,136 @@
-from django.test import TestCase
+from decimal import Decimal
 
-# Create your tests here.
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+from django.urls import reverse
+
+from .models import Combo, Comanda, ItemComanda, Mesa, Prato
+
+
+class PratoModelTests(TestCase):
+    def test_str(self):
+        prato = Prato.objects.create(nome='X-Burger', preco=Decimal('25.90'))
+        self.assertEqual(str(prato), 'X-Burger')
+
+
+class ComboModelTests(TestCase):
+    def test_str_e_pratos_relacionados(self):
+        prato = Prato.objects.create(nome='X-Burger', preco=Decimal('25.90'))
+        combo = Combo.objects.create(nome='Combo X', preco=Decimal('40.00'))
+        combo.pratos.add(prato)
+        self.assertEqual(str(combo), 'Combo X')
+        self.assertIn(prato, combo.pratos.all())
+
+
+class MesaComandaTests(TestCase):
+    def test_apenas_uma_comanda_aberta_por_mesa(self):
+        mesa = Mesa.objects.create(numero=1, capacidade=4)
+        Comanda.objects.create(mesa=mesa)
+        with self.assertRaises(Exception):
+            Comanda.objects.create(mesa=mesa)
+
+    def test_comanda_aberta_property(self):
+        mesa = Mesa.objects.create(numero=1, capacidade=4)
+        self.assertIsNone(mesa.comanda_aberta)
+        comanda = Comanda.objects.create(mesa=mesa)
+        self.assertEqual(mesa.comanda_aberta, comanda)
+
+
+class ItemComandaTests(TestCase):
+    def setUp(self):
+        self.mesa = Mesa.objects.create(numero=1, capacidade=4)
+        self.comanda = Comanda.objects.create(mesa=self.mesa)
+        self.prato = Prato.objects.create(nome='X-Burger', preco=Decimal('25.90'))
+        self.combo = Combo.objects.create(nome='Combo X', preco=Decimal('40.00'))
+
+    def test_item_precisa_de_prato_ou_combo(self):
+        item = ItemComanda(comanda=self.comanda, quantidade=1)
+        with self.assertRaises(ValidationError):
+            item.clean()
+
+    def test_item_nao_pode_ter_prato_e_combo(self):
+        item = ItemComanda(comanda=self.comanda, prato=self.prato, combo=self.combo, quantidade=1)
+        with self.assertRaises(ValidationError):
+            item.clean()
+
+    def test_preco_unitario_e_definido_automaticamente(self):
+        item = ItemComanda.objects.create(comanda=self.comanda, prato=self.prato, quantidade=3)
+        self.assertEqual(item.preco_unitario, self.prato.preco)
+        self.assertEqual(item.subtotal, self.prato.preco * 3)
+
+
+class ComandaFechamentoTests(TestCase):
+    def setUp(self):
+        self.mesa = Mesa.objects.create(numero=1, capacidade=4)
+        self.comanda = Comanda.objects.create(mesa=self.mesa)
+        self.prato = Prato.objects.create(nome='X-Burger', preco=Decimal('25.90'))
+
+    def test_fechar_calcula_total_e_muda_status(self):
+        ItemComanda.objects.create(comanda=self.comanda, prato=self.prato, quantidade=2)
+        self.comanda.fechar()
+        self.assertEqual(self.comanda.status, Comanda.Status.FECHADA)
+        self.assertEqual(self.comanda.total, Decimal('51.80'))
+        self.assertIsNotNone(self.comanda.fechada_em)
+
+    def test_fechar_comanda_ja_fechada_gera_erro(self):
+        self.comanda.fechar()
+        with self.assertRaises(ValidationError):
+            self.comanda.fechar()
+
+
+class ViewsFluxoTests(TestCase):
+    def setUp(self):
+        self.mesa = Mesa.objects.create(numero=1, capacidade=4)
+        self.prato = Prato.objects.create(nome='X-Burger', preco=Decimal('25.90'))
+
+    def test_prato_crud_via_views(self):
+        resp = self.client.post(reverse('prato_create'), {
+            'nome': 'Batata Frita', 'descricao': '', 'preco': '18.50', 'disponivel': 'on',
+        })
+        self.assertEqual(resp.status_code, 302)
+        prato = Prato.objects.get(nome='Batata Frita')
+
+        resp = self.client.post(reverse('prato_update', args=[prato.pk]), {
+            'nome': 'Batata Frita Grande', 'descricao': '', 'preco': '22.00', 'disponivel': 'on',
+        })
+        self.assertEqual(resp.status_code, 302)
+        prato.refresh_from_db()
+        self.assertEqual(prato.nome, 'Batata Frita Grande')
+
+        resp = self.client.post(reverse('prato_delete', args=[prato.pk]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(Prato.objects.filter(pk=prato.pk).exists())
+
+    def test_prato_em_uso_nao_pode_ser_excluido(self):
+        comanda = Comanda.objects.create(mesa=self.mesa)
+        ItemComanda.objects.create(comanda=comanda, prato=self.prato, quantidade=1)
+        resp = self.client.post(reverse('prato_delete', args=[self.prato.pk]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Prato.objects.filter(pk=self.prato.pk).exists())
+
+    def test_abrir_comanda_reaproveita_comanda_aberta(self):
+        resp1 = self.client.get(reverse('abrir_comanda', args=[self.mesa.pk]))
+        resp2 = self.client.get(reverse('abrir_comanda', args=[self.mesa.pk]))
+        self.assertEqual(resp1.url, resp2.url)
+        self.assertEqual(Comanda.objects.filter(mesa=self.mesa).count(), 1)
+
+    def test_fluxo_completo_lancar_item_e_fechar_conta(self):
+        resp = self.client.get(reverse('abrir_comanda', args=[self.mesa.pk]))
+        comanda = Comanda.objects.get(mesa=self.mesa, status=Comanda.Status.ABERTA)
+
+        resp = self.client.post(reverse('adicionar_item', args=[comanda.pk]), {
+            'prato': self.prato.pk, 'combo': '', 'quantidade': '2',
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(comanda.itens.count(), 1)
+
+        resp = self.client.get(reverse('fechar_comanda', args=[comanda.pk]))
+        self.assertEqual(resp.status_code, 302)
+        comanda.refresh_from_db()
+        self.assertEqual(comanda.status, Comanda.Status.FECHADA)
+        self.assertEqual(comanda.total, Decimal('51.80'))
+
+        resp = self.client.post(reverse('adicionar_item', args=[comanda.pk]), {
+            'prato': self.prato.pk, 'combo': '', 'quantidade': '1',
+        })
+        self.assertEqual(comanda.itens.count(), 1)
