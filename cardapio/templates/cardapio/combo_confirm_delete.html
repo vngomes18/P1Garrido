@@ -1,0 +1,13 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Excluir combo{% endblock %}
+{% block content %}
+<h1>Excluir combo</h1>
+<div class="card">
+    <p>Tem certeza que deseja excluir o combo <strong>{{ object.nome }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Excluir</button>
+        <a class="btn btn-small" href="{% url 'combo_list' %}">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

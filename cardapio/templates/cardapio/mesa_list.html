@@ -1,0 +1,39 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Mesas{% endblock %}
+{% block content %}
+<h1>Mesas</h1>
+<div class="actions">
+    <a class="btn" href="{% url 'mesa_create' %}">+ Nova mesa</a>
+</div>
+<table>
+    <thead>
+        <tr><th>Mesa</th><th>Capacidade</th><th>Comanda</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for mesa, comanda in mesas_com_comanda %}
+        <tr>
+            <td>{{ mesa.numero }}</td>
+            <td>{{ mesa.capacidade }}</td>
+            <td>
+                {% if comanda %}
+                    <span class="badge badge-aberta">Aberta</span>
+                {% else %}
+                    <span>Sem comanda aberta</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if comanda %}
+                    <a class="btn btn-small" href="{% url 'comanda_detail' comanda.pk %}">Ver comanda</a>
+                {% else %}
+                    <a class="btn btn-small" href="{% url 'abrir_comanda' mesa.id %}">Abrir comanda</a>
+                {% endif %}
+                <a class="btn btn-small" href="{% url 'mesa_update' mesa.pk %}">Editar</a>
+                <a class="btn btn-small btn-danger" href="{% url 'mesa_delete' mesa.pk %}">Excluir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhuma mesa cadastrada.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

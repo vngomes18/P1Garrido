@@ -1,0 +1,29 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Combos{% endblock %}
+{% block content %}
+<h1>Combos</h1>
+<div class="actions">
+    <a class="btn" href="{% url 'combo_create' %}">+ Novo combo</a>
+</div>
+<table>
+    <thead>
+        <tr><th>Nome</th><th>Itens</th><th>Preco</th><th>Disponivel</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for combo in combos %}
+        <tr>
+            <td>{{ combo.nome }}</td>
+            <td>{% for prato in combo.pratos.all %}{{ prato.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+            <td>R$ {{ combo.preco }}</td>
+            <td>{% if combo.disponivel %}Sim{% else %}Nao{% endif %}</td>
+            <td>
+                <a class="btn btn-small" href="{% url 'combo_update' combo.pk %}">Editar</a>
+                <a class="btn btn-small btn-danger" href="{% url 'combo_delete' combo.pk %}">Excluir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Nenhum combo cadastrado.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

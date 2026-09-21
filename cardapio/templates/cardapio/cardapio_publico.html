@@ -1,0 +1,50 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Cardapio{% endblock %}
+{% block content %}
+<h1>Cardapio</h1>
+
+<div class="card">
+    <h2>Pratos</h2>
+    {% if pratos %}
+    <table>
+        <thead>
+            <tr><th>Nome</th><th>Descricao</th><th>Preco</th></tr>
+        </thead>
+        <tbody>
+            {% for prato in pratos %}
+            <tr>
+                <td>{{ prato.nome }}</td>
+                <td>{{ prato.descricao }}</td>
+                <td>R$ {{ prato.preco }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhum prato disponivel no momento.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Combos</h2>
+    {% if combos %}
+    <table>
+        <thead>
+            <tr><th>Nome</th><th>Descricao</th><th>Itens</th><th>Preco</th></tr>
+        </thead>
+        <tbody>
+            {% for combo in combos %}
+            <tr>
+                <td>{{ combo.nome }}</td>
+                <td>{{ combo.descricao }}</td>
+                <td>{% for prato in combo.pratos.all %}{{ prato.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+                <td>R$ {{ combo.preco }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhum combo disponivel no momento.</p>
+    {% endif %}
+</div>
+{% endblock %}

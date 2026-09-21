@@ -1,0 +1,28 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Pratos{% endblock %}
+{% block content %}
+<h1>Pratos</h1>
+<div class="actions">
+    <a class="btn" href="{% url 'prato_create' %}">+ Novo prato</a>
+</div>
+<table>
+    <thead>
+        <tr><th>Nome</th><th>Preco</th><th>Disponivel</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for prato in pratos %}
+        <tr>
+            <td>{{ prato.nome }}</td>
+            <td>R$ {{ prato.preco }}</td>
+            <td>{% if prato.disponivel %}Sim{% else %}Nao{% endif %}</td>
+            <td>
+                <a class="btn btn-small" href="{% url 'prato_update' prato.pk %}">Editar</a>
+                <a class="btn btn-small btn-danger" href="{% url 'prato_delete' prato.pk %}">Excluir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhum prato cadastrado.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

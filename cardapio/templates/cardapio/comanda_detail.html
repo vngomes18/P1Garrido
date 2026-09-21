@@ -1,0 +1,66 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Comanda #{{ comanda.pk }}{% endblock %}
+{% block content %}
+<h1>Comanda #{{ comanda.pk }} - Mesa {{ comanda.mesa.numero }}</h1>
+
+<div class="card">
+    <p>
+        Status:
+        {% if comanda.status == 'ABERTA' %}
+            <span class="badge badge-aberta">Aberta</span>
+        {% else %}
+            <span class="badge badge-fechada">Fechada</span>
+        {% endif %}
+    </p>
+    <p>Aberta em: {{ comanda.aberta_em }}</p>
+    {% if comanda.fechada_em %}<p>Fechada em: {{ comanda.fechada_em }}</p>{% endif %}
+</div>
+
+<div class="card">
+    <h2>Itens</h2>
+    <table>
+        <thead>
+            <tr><th>Item</th><th>Qtd</th><th>Preco unit.</th><th>Subtotal</th>{% if comanda.status == 'ABERTA' %}<th></th>{% endif %}</tr>
+        </thead>
+        <tbody>
+            {% for item in itens %}
+            <tr>
+                <td>{{ item.prato|default:item.combo }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>R$ {{ item.preco_unitario }}</td>
+                <td>R$ {{ item.subtotal }}</td>
+                {% if comanda.status == 'ABERTA' %}
+                <td>
+                    <form method="post" action="{% url 'remover_item' item.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn-small btn-danger" type="submit">Remover</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">Nenhum item lancado ainda.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="total">Total: R$ {% if comanda.status == 'ABERTA' %}{{ comanda.calcular_total }}{% else %}{{ comanda.total }}{% endif %}</p>
+</div>
+
+{% if comanda.status == 'ABERTA' %}
+<div class="card">
+    <h2>Lancar item</h2>
+    <form method="post" action="{% url 'adicionar_item' comanda.pk %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Adicionar</button>
+    </form>
+</div>
+
+<div class="card">
+    <form method="post" action="{% url 'fechar_comanda' comanda.pk %}" onsubmit="return confirm('Fechar a conta desta mesa?');">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Fechar conta</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}
