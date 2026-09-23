@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
-from .forms import PratoForm
+from .forms import ComboForm, PratoForm
 from .models import Combo, Comanda, ItemComanda, Mesa, Prato
 
 
@@ -148,6 +148,50 @@ class PratoFormPrecoTests(TestCase):
         self.assertContains(resp, 'O preco do prato deve ser maior que zero.')
         prato.refresh_from_db()
         self.assertEqual(prato.preco, Decimal('10.00'))
+
+
+class ComboFormPrecoTests(TestCase):
+    def setUp(self):
+        # Soma dos pratos separados: 25.90 + 18.50 + 7.00 = 51.40
+        # Faixa permitida (10% a 15% de desconto): de 43.69 a 46.26
+        self.pratos = [
+            Prato.objects.create(nome='X-Burger', preco=Decimal('25.90')),
+            Prato.objects.create(nome='Batata Frita', preco=Decimal('18.50')),
+            Prato.objects.create(nome='Refrigerante', preco=Decimal('7.00')),
+        ]
+
+    def dados(self, preco):
+        return {
+            'nome': 'Combo X-Burger', 'descricao': '', 'preco': preco,
+            'pratos': [p.pk for p in self.pratos], 'disponivel': 'on',
+        }
+
+    def test_preco_dentro_da_faixa_de_desconto_e_aceito(self):
+        for preco in ('43.69', '45.00', '46.26'):
+            self.assertTrue(ComboForm(data=self.dados(preco)).is_valid(), preco)
+
+    def test_desconto_menor_que_10_por_cento_e_rejeitado(self):
+        form = ComboForm(data=self.dados('46.27'))
+        self.assertFalse(form.is_valid())
+        self.assertIn('entre R$ 43.69 e R$ 46.26', form.errors['preco'][0])
+
+    def test_preco_maior_que_pratos_separados_e_rejeitado(self):
+        self.assertFalse(ComboForm(data=self.dados('55.00')).is_valid())
+
+    def test_desconto_maior_que_15_por_cento_e_rejeitado(self):
+        self.assertFalse(ComboForm(data=self.dados('43.68')).is_valid())
+
+    def test_preco_zero_ou_negativo_e_rejeitado(self):
+        for preco in ('0', '-10.00'):
+            form = ComboForm(data=self.dados(preco))
+            self.assertFalse(form.is_valid())
+            self.assertEqual(form.errors['preco'], ['O preco do combo deve ser maior que zero.'])
+
+    def test_mensagem_aparece_no_template_e_combo_nao_e_salvo(self):
+        resp = self.client.post(reverse('combo_create'), self.dados('51.40'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'O combo deve ter de 10% a 15% de desconto')
+        self.assertFalse(Combo.objects.exists())
 
 
 class ViewsFluxoTests(TestCase):

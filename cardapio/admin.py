@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .forms import PratoForm
+from .forms import ComboForm, PratoForm
 from .models import Combo, Comanda, ItemComanda, Mesa, Prato
 
 
@@ -14,6 +14,7 @@ class PratoAdmin(admin.ModelAdmin):
 
 @admin.register(Combo)
 class ComboAdmin(admin.ModelAdmin):
+    form = ComboForm
     list_display = ('nome', 'preco', 'disponivel')
     list_filter = ('disponivel',)
     search_fields = ('nome',)
