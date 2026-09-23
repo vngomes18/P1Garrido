@@ -15,6 +15,8 @@ Entidades: Prato, Combo, Mesa, Comanda, Item (ItemComanda).
 - Lançamento de itens (pratos/combos) na comanda aberta.
 - Fechamento de conta, com cálculo automático do total.
 
+As features adicionais (busca/filtro e validação de preço) estão explicadas em [RELATORIO.md](RELATORIO.md).
+
 ## Como rodar localmente
 
 ```powershell
