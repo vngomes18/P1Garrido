@@ -5,8 +5,16 @@ from django.db import models
 
 
 class Prato(models.Model):
+    class Categoria(models.TextChoices):
+        ENTRADA = 'ENTRADA', 'Entrada'
+        PRINCIPAL = 'PRINCIPAL', 'Prato principal'
+        ACOMPANHAMENTO = 'ACOMPANHAMENTO', 'Acompanhamento'
+        BEBIDA = 'BEBIDA', 'Bebida'
+        SOBREMESA = 'SOBREMESA', 'Sobremesa'
+
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
+    categoria = models.CharField(max_length=20, choices=Categoria.choices, default=Categoria.PRINCIPAL)
     preco = models.DecimalField(max_digits=8, decimal_places=2)
     disponivel = models.BooleanField(default=True)
 

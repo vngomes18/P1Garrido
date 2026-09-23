@@ -8,11 +8,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         pratos_dados = [
-            {'nome': 'X-Burger', 'descricao': 'Pao, hamburguer, queijo e salada.', 'preco': '25.90'},
-            {'nome': 'Batata Frita', 'descricao': 'Porcao de batata frita crocante.', 'preco': '18.50'},
-            {'nome': 'Refrigerante', 'descricao': 'Lata 350ml.', 'preco': '7.00'},
-            {'nome': 'Salada Caesar', 'descricao': 'Alface, frango grelhado, croutons e molho caesar.', 'preco': '29.90'},
-            {'nome': 'Suco Natural', 'descricao': 'Copo 400ml, sabores variados.', 'preco': '9.50'},
+            {'nome': 'X-Burger', 'categoria': Prato.Categoria.PRINCIPAL, 'descricao': 'Pao, hamburguer, queijo e salada.', 'preco': '25.90'},
+            {'nome': 'Batata Frita', 'categoria': Prato.Categoria.ACOMPANHAMENTO, 'descricao': 'Porcao de batata frita crocante.', 'preco': '18.50'},
+            {'nome': 'Refrigerante', 'categoria': Prato.Categoria.BEBIDA, 'descricao': 'Lata 350ml.', 'preco': '7.00'},
+            {'nome': 'Salada Caesar', 'categoria': Prato.Categoria.ENTRADA, 'descricao': 'Alface, frango grelhado, croutons e molho caesar.', 'preco': '29.90'},
+            {'nome': 'Suco Natural', 'categoria': Prato.Categoria.BEBIDA, 'descricao': 'Copo 400ml, sabores variados.', 'preco': '9.50'},
         ]
 
         pratos = {}

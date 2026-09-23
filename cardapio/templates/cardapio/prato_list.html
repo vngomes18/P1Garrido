@@ -5,14 +5,26 @@
 <div class="actions">
     <a class="btn" href="{% url 'prato_create' %}">+ Novo prato</a>
 </div>
+<form method="get" class="filtros">
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nome do prato">
+    <select name="categoria">
+        <option value="">Todas as categorias</option>
+        {% for valor, rotulo in categorias %}
+        <option value="{{ valor }}" {% if request.GET.categoria == valor %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filtrar</button>
+    {% if filtrando %}<a class="btn btn-small" href="{% url 'prato_list' %}">Limpar</a>{% endif %}
+</form>
 <table>
     <thead>
-        <tr><th>Nome</th><th>Preco</th><th>Disponivel</th><th></th></tr>
+        <tr><th>Nome</th><th>Categoria</th><th>Preco</th><th>Disponivel</th><th></th></tr>
     </thead>
     <tbody>
         {% for prato in pratos %}
         <tr>
             <td>{{ prato.nome }}</td>
+            <td>{{ prato.get_categoria_display }}</td>
             <td>R$ {{ prato.preco }}</td>
             <td>{% if prato.disponivel %}Sim{% else %}Nao{% endif %}</td>
             <td>
@@ -21,7 +33,7 @@
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="4">Nenhum prato cadastrado.</td></tr>
+        <tr><td colspan="5">{% if filtrando %}Nenhum prato encontrado para os filtros informados.{% else %}Nenhum prato cadastrado.{% endif %}</td></tr>
         {% endfor %}
     </tbody>
 </table>

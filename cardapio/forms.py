@@ -6,7 +6,7 @@ from .models import Combo, ItemComanda, Mesa, Prato
 class PratoForm(forms.ModelForm):
     class Meta:
         model = Prato
-        fields = ['nome', 'descricao', 'preco', 'disponivel']
+        fields = ['nome', 'descricao', 'categoria', 'preco', 'disponivel']
 
 
 class ComboForm(forms.ModelForm):

@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -31,6 +32,24 @@ class PratoListView(ListView):
     model = Prato
     template_name = 'cardapio/prato_list.html'
     context_object_name = 'pratos'
+
+    def get_queryset(self):
+        q = self.request.GET.get('q', '').strip()
+        categoria = self.request.GET.get('categoria', '')
+
+        # Busca por nome e filtro por categoria combinados em uma unica consulta com Q().
+        filtros = Q()
+        if q:
+            filtros &= Q(nome__icontains=q)
+        if categoria in Prato.Categoria.values:
+            filtros &= Q(categoria=categoria)
+        return Prato.objects.filter(filtros)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Prato.Categoria.choices
+        context['filtrando'] = bool(self.request.GET.get('q', '').strip() or self.request.GET.get('categoria'))
+        return context
 
 
 class PratoCreateView(CreateView):

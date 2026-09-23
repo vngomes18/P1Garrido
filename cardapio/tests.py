@@ -78,6 +78,50 @@ class ComandaFechamentoTests(TestCase):
             self.comanda.fechar()
 
 
+class PratoBuscaFiltroTests(TestCase):
+    def setUp(self):
+        self.burger = Prato.objects.create(
+            nome='X-Burger', categoria=Prato.Categoria.PRINCIPAL, preco=Decimal('25.90'))
+        self.cheddar = Prato.objects.create(
+            nome='Burger Cheddar', categoria=Prato.Categoria.PRINCIPAL, preco=Decimal('29.90'))
+        self.suco = Prato.objects.create(
+            nome='Suco Natural', categoria=Prato.Categoria.BEBIDA, preco=Decimal('9.50'))
+
+    def listar(self, **params):
+        return self.client.get(reverse('prato_list'), params)
+
+    def test_sem_filtros_lista_todos(self):
+        resp = self.listar()
+        self.assertEqual(len(resp.context['pratos']), 3)
+
+    def test_busca_por_nome_nao_diferencia_maiusculas(self):
+        resp = self.listar(q='BURGER')
+        self.assertCountEqual(resp.context['pratos'], [self.burger, self.cheddar])
+
+    def test_filtro_por_categoria(self):
+        resp = self.listar(categoria='BEBIDA')
+        self.assertCountEqual(resp.context['pratos'], [self.suco])
+
+    def test_busca_e_categoria_combinadas(self):
+        resp = self.listar(q='cheddar', categoria='PRINCIPAL')
+        self.assertCountEqual(resp.context['pratos'], [self.cheddar])
+        resp = self.listar(q='burger', categoria='BEBIDA')
+        self.assertEqual(len(resp.context['pratos']), 0)
+
+    def test_categoria_invalida_e_ignorada(self):
+        resp = self.listar(categoria='INEXISTENTE')
+        self.assertEqual(len(resp.context['pratos']), 3)
+
+    def test_sem_resultado_mostra_mensagem(self):
+        resp = self.listar(q='lasanha')
+        self.assertContains(resp, 'Nenhum prato encontrado para os filtros informados.')
+
+    def test_campos_mantem_valores_da_pesquisa(self):
+        resp = self.listar(q='burger', categoria='PRINCIPAL')
+        self.assertContains(resp, 'name="q" value="burger"')
+        self.assertContains(resp, '<option value="PRINCIPAL" selected>')
+
+
 class ViewsFluxoTests(TestCase):
     def setUp(self):
         self.mesa = Mesa.objects.create(numero=1, capacidade=4)
@@ -85,13 +129,13 @@ class ViewsFluxoTests(TestCase):
 
     def test_prato_crud_via_views(self):
         resp = self.client.post(reverse('prato_create'), {
-            'nome': 'Batata Frita', 'descricao': '', 'preco': '18.50', 'disponivel': 'on',
+            'nome': 'Batata Frita', 'descricao': '', 'categoria': 'ACOMPANHAMENTO', 'preco': '18.50', 'disponivel': 'on',
         })
         self.assertEqual(resp.status_code, 302)
         prato = Prato.objects.get(nome='Batata Frita')
 
         resp = self.client.post(reverse('prato_update', args=[prato.pk]), {
-            'nome': 'Batata Frita Grande', 'descricao': '', 'preco': '22.00', 'disponivel': 'on',
+            'nome': 'Batata Frita Grande', 'descricao': '', 'categoria': 'ACOMPANHAMENTO', 'preco': '22.00', 'disponivel': 'on',
         })
         self.assertEqual(resp.status_code, 302)
         prato.refresh_from_db()
