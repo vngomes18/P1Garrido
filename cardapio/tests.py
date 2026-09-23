@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
+from .forms import PratoForm
 from .models import Combo, Comanda, ItemComanda, Mesa, Prato
 
 
@@ -120,6 +121,33 @@ class PratoBuscaFiltroTests(TestCase):
         resp = self.listar(q='burger', categoria='PRINCIPAL')
         self.assertContains(resp, 'name="q" value="burger"')
         self.assertContains(resp, '<option value="PRINCIPAL" selected>')
+
+
+class PratoFormPrecoTests(TestCase):
+    def dados(self, preco):
+        return {'nome': 'Teste', 'descricao': '', 'categoria': 'PRINCIPAL', 'preco': preco, 'disponivel': 'on'}
+
+    def test_preco_positivo_e_aceito(self):
+        self.assertTrue(PratoForm(data=self.dados('0.01')).is_valid())
+
+    def test_preco_zero_ou_negativo_e_rejeitado(self):
+        for preco in ('0', '0.00', '-5.00'):
+            form = PratoForm(data=self.dados(preco))
+            self.assertFalse(form.is_valid())
+            self.assertEqual(form.errors['preco'], ['O preco do prato deve ser maior que zero.'])
+
+    def test_mensagem_aparece_no_template_e_prato_nao_e_salvo(self):
+        resp = self.client.post(reverse('prato_create'), self.dados('0'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'O preco do prato deve ser maior que zero.')
+        self.assertFalse(Prato.objects.filter(nome='Teste').exists())
+
+    def test_edicao_tambem_valida_o_preco(self):
+        prato = Prato.objects.create(nome='Teste', preco=Decimal('10.00'))
+        resp = self.client.post(reverse('prato_update', args=[prato.pk]), self.dados('-1'))
+        self.assertContains(resp, 'O preco do prato deve ser maior que zero.')
+        prato.refresh_from_db()
+        self.assertEqual(prato.preco, Decimal('10.00'))
 
 
 class ViewsFluxoTests(TestCase):

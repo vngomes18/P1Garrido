@@ -8,6 +8,13 @@ class PratoForm(forms.ModelForm):
         model = Prato
         fields = ['nome', 'descricao', 'categoria', 'preco', 'disponivel']
 
+    def clean_preco(self):
+        preco = self.cleaned_data.get('preco')
+        # Um prato com preco zero ou negativo zeraria/abateria o total da comanda no fechamento.
+        if preco is not None and preco <= 0:
+            raise forms.ValidationError('O preco do prato deve ser maior que zero.')
+        return preco
+
 
 class ComboForm(forms.ModelForm):
     class Meta:
