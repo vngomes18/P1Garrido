@@ -1,0 +1,66 @@
+{% extends 'cardapio/base.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<form method="get" class="filtros">
+    {{ form.inicio.label_tag }} {{ form.inicio }}
+    {{ form.fim.label_tag }} {{ form.fim }}
+    <button type="submit" class="btn">Filtrar periodo</button>
+    {% if request.GET.inicio or request.GET.fim %}<a class="btn btn-small" href="{% url 'dashboard' %}">Limpar</a>{% endif %}
+    {% if pode_exportar %}<a class="btn btn-small" href="{% url 'exportar_csv' %}{% if querystring %}?{{ querystring }}{% endif %}">Exportar CSV</a>{% endif %}
+</form>
+{{ form.non_field_errors }}
+{{ form.inicio.errors }}{{ form.fim.errors }}
+
+<div class="kpis">
+    <div class="kpi"><small>Comandas no periodo</small><strong>{{ kpis.comandas }}</strong></div>
+    <div class="kpi"><small>Abertas agora</small><strong>{{ kpis.abertas }}</strong></div>
+    <div class="kpi"><small>Faturamento (fechadas)</small><strong>R$ {{ kpis.faturamento }}</strong></div>
+    <div class="kpi"><small>Ticket medio</small><strong>R$ {{ kpis.ticket_medio }}</strong></div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h2>Itens mais vendidos</h2>
+        <table>
+            <thead><tr><th>Item</th><th>Qtd</th></tr></thead>
+            <tbody>
+                {% for item in ranking %}
+                <tr><td>{{ item.nome_item }}</td><td>{{ item.total }}</td></tr>
+                {% empty %}
+                <tr><td colspan="2">Sem dados no periodo.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Vendas por categoria</h2>
+        {% if por_categoria %}
+        <canvas id="grafico-categoria" height="200"></canvas>
+        {% else %}
+        <p>Sem dados no periodo.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if mostra_series %}
+<div class="card">
+    <h2>Faturamento por mes</h2>
+    {% if por_mes %}
+    <canvas id="grafico-mes" height="120"></canvas>
+    {% else %}
+    <p>Sem comandas fechadas no periodo.</p>
+    {% endif %}
+</div>
+{% else %}
+<p><small>Series mensais e exportacao ficam disponiveis apenas para administradores.</small></p>
+{% endif %}
+
+{{ por_categoria|json_script:"dados-categoria" }}
+{% if mostra_series %}{{ por_mes|json_script:"dados-mes" }}{% endif %}
+<script src="{% static 'js/chart.umd.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
