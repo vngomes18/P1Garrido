@@ -2,9 +2,11 @@
 {% block title %}Mesas{% endblock %}
 {% block content %}
 <h1>Mesas</h1>
+{% if user.perfil.eh_admin %}
 <div class="actions">
     <a class="btn" href="{% url 'mesa_create' %}">+ Nova mesa</a>
 </div>
+{% endif %}
 <table>
     <thead>
         <tr><th>Mesa</th><th>Capacidade</th><th>Comanda</th><th></th></tr>
@@ -25,10 +27,15 @@
                 {% if comanda %}
                     <a class="btn btn-small" href="{% url 'comanda_detail' comanda.pk %}">Ver comanda</a>
                 {% else %}
-                    <a class="btn btn-small" href="{% url 'abrir_comanda' mesa.id %}">Abrir comanda</a>
+                    <form method="post" action="{% url 'abrir_comanda' mesa.id %}" class="inline">
+                        {% csrf_token %}
+                        <button class="btn btn-small" type="submit">Abrir comanda</button>
+                    </form>
                 {% endif %}
+                {% if user.perfil.eh_admin %}
                 <a class="btn btn-small" href="{% url 'mesa_update' mesa.pk %}">Editar</a>
                 <a class="btn btn-small btn-danger" href="{% url 'mesa_delete' mesa.pk %}">Excluir</a>
+                {% endif %}
             </td>
         </tr>
         {% empty %}

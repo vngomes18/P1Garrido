@@ -3,7 +3,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.cardapio_publico, name='cardapio_publico'),
+    path('', views.inicio, name='inicio'),
+    path('cardapio/<slug:slug>/', views.cardapio_publico, name='cardapio_publico'),
+
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/exportar.csv', views.exportar_csv, name='exportar_csv'),
 
     path('pratos/', views.PratoListView.as_view(), name='prato_list'),
     path('pratos/novo/', views.PratoCreateView.as_view(), name='prato_create'),
@@ -21,6 +25,7 @@ urlpatterns = [
     path('mesas/<int:pk>/excluir/', views.MesaDeleteView.as_view(), name='mesa_delete'),
     path('mesas/<int:mesa_id>/abrir-comanda/', views.abrir_comanda, name='abrir_comanda'),
 
+    path('comandas/', views.ComandaListView.as_view(), name='comanda_list'),
     path('comandas/<int:pk>/', views.comanda_detail, name='comanda_detail'),
     path('comandas/<int:comanda_id>/itens/adicionar/', views.adicionar_item, name='adicionar_item'),
     path('comandas/<int:comanda_id>/fechar/', views.fechar_comanda, name='fechar_comanda'),

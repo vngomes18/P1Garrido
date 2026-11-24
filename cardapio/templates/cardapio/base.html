@@ -36,17 +36,41 @@
         .badge-aberta { background: #fff3cd; color: #856404; }
         .badge-fechada { background: #d4edda; color: #155724; }
         .total { font-size: 1.3rem; font-weight: bold; }
+        header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem; }
+        .usuario { color: #cfd8dc; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
+        .usuario form { margin: 0; }
+        .btn-link { background: none; border: none; color: #fff; text-decoration: underline; cursor: pointer; font-size: 0.85rem; padding: 0; }
+        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+        .kpi { background: #fff; border-radius: 6px; padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .kpi small { display: block; color: #666; margin-bottom: 0.3rem; }
+        .kpi strong { font-size: 1.5rem; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        .errorlist { color: #c0392b; list-style: none; padding: 0; margin: 0.3rem 0; }
+        .inline { display: inline; }
     </style>
 </head>
 <body>
     <header>
         <nav>
-            <a href="{% url 'cardapio_publico' %}">Cardapio</a>
+            {% if user.perfil %}
+            <a href="{% url 'dashboard' %}">Dashboard</a>
             <a href="{% url 'prato_list' %}">Pratos</a>
             <a href="{% url 'combo_list' %}">Combos</a>
             <a href="{% url 'mesa_list' %}">Mesas</a>
-            <a href="/admin/">Admin</a>
+            <a href="{% url 'comanda_list' %}">Comandas</a>
+            <a href="{% url 'cardapio_publico' user.perfil.organizacao.slug %}">Cardapio publico</a>
+            {% endif %}
+            {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
         </nav>
+        {% if user.is_authenticated %}
+        <div class="usuario">
+            <span>{{ user.username }}{% if user.perfil %} &middot; {{ user.perfil.organizacao }} ({{ user.perfil.get_papel_display }}){% endif %}</span>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-link">Sair</button>
+            </form>
+        </div>
+        {% endif %}
     </header>
     <main>
         {% if messages %}
