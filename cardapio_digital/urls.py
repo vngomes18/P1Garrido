@@ -21,6 +21,11 @@ from django.urls import include, path
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # API REST (Aula 13): tudo sob /api/, separado das paginas.
+    path('api/', include('cardapio.api_urls')),
+    # Login/logout da Browsable API do DRF.
+    path('api-auth/', include('rest_framework.urls')),
+
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('', include('cardapio.urls')),
