@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'core',
     'cardapio',
 ]
 
@@ -139,6 +141,23 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+
+# Login (Aula 14/15): quem nao esta logado e enviado para a tela de login
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'inicio'
+LOGOUT_REDIRECT_URL = 'login'
+
+
+# API REST (Aula 13): sem login a API responde 401/403. Autenticacao por sessao do Django.
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
 
 
 # Email
