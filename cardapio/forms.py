@@ -1,63 +1,51 @@
-from decimal import ROUND_DOWN, ROUND_UP, Decimal
-
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import Combo, ItemComanda, Mesa, Prato
+from .validators import validar_desconto_combo
 
 
 class PratoForm(forms.ModelForm):
+    # A regra "preco > 0" vive no model (validators.py): vale aqui, no Admin e na API.
     class Meta:
         model = Prato
         fields = ['nome', 'descricao', 'categoria', 'preco', 'disponivel']
 
-    def clean_preco(self):
-        preco = self.cleaned_data.get('preco')
-        # Um prato com preco zero ou negativo zeraria/abateria o total da comanda no fechamento.
-        if preco is not None and preco <= 0:
-            raise forms.ValidationError('O preco do prato deve ser maior que zero.')
-        return preco
+    def __init__(self, *args, org=None, **kwargs):
+        # Sem campos relacionados, `org` nao filtra nada; o parametro existe para que
+        # todas as views criem os formularios do mesmo jeito.
+        super().__init__(*args, **kwargs)
 
 
 class ComboForm(forms.ModelForm):
-    # O combo precisa sair entre 10% e 15% mais barato que a soma dos pratos pedidos separadamente.
-    DESCONTO_MINIMO = Decimal('0.10')
-    DESCONTO_MAXIMO = Decimal('0.15')
-
     class Meta:
         model = Combo
         fields = ['nome', 'descricao', 'preco', 'pratos', 'disponivel']
         widgets = {'pratos': forms.CheckboxSelectMultiple}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, org=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if org is not None:
+            # Todo select/M2M do formulario so mostra opcoes da organizacao (Aula 14).
+            self.fields['pratos'].queryset = Prato.objects.filter(organizacao=org)
         # Mostra o preco de cada prato para facilitar o calculo do preco do combo.
         self.fields['pratos'].label_from_instance = lambda prato: f'{prato.nome} (R$ {prato.preco})'
 
-    def clean_preco(self):
-        preco = self.cleaned_data.get('preco')
-        if preco is not None and preco <= 0:
-            raise forms.ValidationError('O preco do combo deve ser maior que zero.')
-        return preco
-
     def clean(self):
         cleaned_data = super().clean()
-        preco = cleaned_data.get('preco')
-        pratos = cleaned_data.get('pratos')
-        if preco is None or not pratos:
-            return cleaned_data
-
-        soma = sum((prato.preco for prato in pratos), Decimal('0.00'))
-        preco_maximo = soma * (1 - self.DESCONTO_MINIMO)
-        preco_minimo = soma * (1 - self.DESCONTO_MAXIMO)
-        if not preco_minimo <= preco <= preco_maximo:
-            centavo = Decimal('0.01')
-            self.add_error('preco', forms.ValidationError(
-                f'O combo deve ter de 10% a 15% de desconto sobre a soma dos pratos '
-                f'(R$ {soma.quantize(centavo)}). Informe um preco entre '
-                f'R$ {preco_minimo.quantize(centavo, rounding=ROUND_UP)} e '
-                f'R$ {preco_maximo.quantize(centavo, rounding=ROUND_DOWN)}.'
-            ))
+        try:
+            validar_desconto_combo(cleaned_data.get('preco'), cleaned_data.get('pratos'))
+        except ValidationError as erro:
+            self.add_error('preco', erro)
         return cleaned_data
+
+
+class ComboAdminForm(ComboForm):
+    """Mesma regra de desconto no Django Admin (la a organizacao e escolhida no formulario)."""
+
+    class Meta(ComboForm.Meta):
+        fields = ComboForm.Meta.fields + ['organizacao']
+        widgets = {}
 
 
 class MesaForm(forms.ModelForm):
@@ -65,17 +53,36 @@ class MesaForm(forms.ModelForm):
         model = Mesa
         fields = ['numero', 'capacidade']
 
+    def __init__(self, *args, org=None, **kwargs):
+        self.org = org
+        super().__init__(*args, **kwargs)
+
+    def clean_numero(self):
+        # A organizacao nao esta no formulario, entao o Django nao valida a restricao
+        # de unicidade por organizacao: tratamos aqui para nao estourar IntegrityError.
+        numero = self.cleaned_data['numero']
+        if self.org is not None:
+            duplicadas = Mesa.objects.filter(organizacao=self.org, numero=numero)
+            if self.instance.pk:
+                duplicadas = duplicadas.exclude(pk=self.instance.pk)
+            if duplicadas.exists():
+                raise forms.ValidationError('Ja existe uma mesa com este numero.')
+        return numero
+
 
 class ItemComandaForm(forms.ModelForm):
     class Meta:
         model = ItemComanda
         fields = ['prato', 'combo', 'quantidade']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, org=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['prato'].queryset = Prato.objects.filter(disponivel=True)
+        pratos, combos = Prato.objects.filter(disponivel=True), Combo.objects.filter(disponivel=True)
+        if org is not None:
+            pratos, combos = pratos.filter(organizacao=org), combos.filter(organizacao=org)
+        self.fields['prato'].queryset = pratos
         self.fields['prato'].required = False
-        self.fields['combo'].queryset = Combo.objects.filter(disponivel=True)
+        self.fields['combo'].queryset = combos
         self.fields['combo'].required = False
 
     def clean(self):
@@ -84,4 +91,18 @@ class ItemComandaForm(forms.ModelForm):
         combo = cleaned_data.get('combo')
         if bool(prato) == bool(combo):
             raise forms.ValidationError('Selecione um prato ou um combo, nao ambos nem nenhum.')
+        return cleaned_data
+
+
+class PeriodoForm(forms.Form):
+    """Filtro de periodo do dashboard: valida as datas da URL (uma data invalida nao gera erro 500)."""
+
+    inicio = forms.DateField(required=False, label='De', widget=forms.DateInput(attrs={'type': 'date'}))
+    fim = forms.DateField(required=False, label='Ate', widget=forms.DateInput(attrs={'type': 'date'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        inicio, fim = cleaned_data.get('inicio'), cleaned_data.get('fim')
+        if inicio and fim and inicio > fim:
+            raise forms.ValidationError('A data inicial nao pode ser depois da data final.')
         return cleaned_data
