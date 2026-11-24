@@ -1,10 +1,15 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 
+from core.models import DaOrganizacao
 
-class Prato(models.Model):
+from .validators import preco_combo_positivo, preco_prato_positivo
+
+
+class Prato(DaOrganizacao):
     class Categoria(models.TextChoices):
         ENTRADA = 'ENTRADA', 'Entrada'
         PRINCIPAL = 'PRINCIPAL', 'Prato principal'
@@ -15,7 +20,7 @@ class Prato(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     categoria = models.CharField(max_length=20, choices=Categoria.choices, default=Categoria.PRINCIPAL)
-    preco = models.DecimalField(max_digits=8, decimal_places=2)
+    preco = models.DecimalField(max_digits=8, decimal_places=2, validators=[preco_prato_positivo])
     disponivel = models.BooleanField(default=True)
 
     class Meta:
@@ -27,10 +32,10 @@ class Prato(models.Model):
         return self.nome
 
 
-class Combo(models.Model):
+class Combo(DaOrganizacao):
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
-    preco = models.DecimalField(max_digits=8, decimal_places=2)
+    preco = models.DecimalField(max_digits=8, decimal_places=2, validators=[preco_combo_positivo])
     pratos = models.ManyToManyField(Prato, related_name='combos')
     disponivel = models.BooleanField(default=True)
 
@@ -43,14 +48,18 @@ class Combo(models.Model):
         return self.nome
 
 
-class Mesa(models.Model):
-    numero = models.PositiveIntegerField(unique=True)
+class Mesa(DaOrganizacao):
+    numero = models.PositiveIntegerField()
     capacidade = models.PositiveIntegerField(default=4)
 
     class Meta:
         ordering = ['numero']
         verbose_name = 'Mesa'
         verbose_name_plural = 'Mesas'
+        constraints = [
+            # Duas organizacoes podem ter a "Mesa 1"; a mesma organizacao nao pode ter duas.
+            models.UniqueConstraint(fields=['organizacao', 'numero'], name='mesa_numero_unico_por_org'),
+        ]
 
     def __str__(self):
         return f'Mesa {self.numero}'
@@ -60,7 +69,7 @@ class Mesa(models.Model):
         return self.comandas.filter(status=Comanda.Status.ABERTA).first()
 
 
-class Comanda(models.Model):
+class Comanda(DaOrganizacao):
     class Status(models.TextChoices):
         ABERTA = 'ABERTA', 'Aberta'
         FECHADA = 'FECHADA', 'Fechada'
@@ -100,11 +109,11 @@ class Comanda(models.Model):
         self.save(update_fields=['total', 'status', 'fechada_em'])
 
 
-class ItemComanda(models.Model):
+class ItemComanda(DaOrganizacao):
     comanda = models.ForeignKey(Comanda, on_delete=models.CASCADE, related_name='itens')
     prato = models.ForeignKey(Prato, on_delete=models.PROTECT, null=True, blank=True)
     combo = models.ForeignKey(Combo, on_delete=models.PROTECT, null=True, blank=True)
-    quantidade = models.PositiveIntegerField(default=1)
+    quantidade = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     preco_unitario = models.DecimalField(max_digits=8, decimal_places=2)
 
     class Meta:
@@ -127,10 +136,16 @@ class ItemComanda(models.Model):
     def clean(self):
         if bool(self.prato_id) == bool(self.combo_id):
             raise ValidationError('Informe um prato ou um combo, nao ambos nem nenhum.')
+        produto = self.prato or self.combo
+        if self.comanda_id and produto.organizacao_id != self.comanda.organizacao_id:
+            raise ValidationError('O item deve pertencer a mesma organizacao da comanda.')
 
     def save(self, *args, **kwargs):
-        if not self.preco_unitario:
+        if self.preco_unitario is None:
             self.preco_unitario = (self.prato or self.combo).preco
+        if not self.organizacao_id:
+            # A organizacao do item e sempre a da comanda: nunca vem de fora.
+            self.organizacao_id = self.comanda.organizacao_id
         super().save(*args, **kwargs)
 
     @property
