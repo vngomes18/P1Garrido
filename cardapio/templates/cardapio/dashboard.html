@@ -30,7 +30,7 @@
                 {% for item in ranking %}
                 <tr><td>{{ item.nome_item }}</td><td>{{ item.total }}</td></tr>
                 {% empty %}
-                <tr><td colspan="2">Sem dados no periodo.</td></tr>
+                <tr><td colspan="2" class="vazio">Sem dados no periodo.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -39,7 +39,7 @@
     <div class="card">
         <h2>Vendas por categoria</h2>
         {% if por_categoria %}
-        <canvas id="grafico-categoria" height="200"></canvas>
+        <div class="grafico"><canvas id="grafico-categoria"></canvas></div>
         {% else %}
         <p>Sem dados no periodo.</p>
         {% endif %}
@@ -50,13 +50,13 @@
 <div class="card">
     <h2>Faturamento por mes</h2>
     {% if por_mes %}
-    <canvas id="grafico-mes" height="120"></canvas>
+    <div class="grafico"><canvas id="grafico-mes"></canvas></div>
     {% else %}
     <p>Sem comandas fechadas no periodo.</p>
     {% endif %}
 </div>
 {% else %}
-<p><small>Series mensais e exportacao ficam disponiveis apenas para administradores.</small></p>
+<p class="nota">Series mensais e exportacao ficam disponiveis apenas para administradores.</p>
 {% endif %}
 
 {{ por_categoria|json_script:"dados-categoria" }}

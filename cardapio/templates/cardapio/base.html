@@ -1,76 +1,39 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Cardapio Digital{% endblock %}</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background: #f4f4f5; color: #222; }
-        header { background: #2c3e50; color: #fff; padding: 1rem 2rem; }
-        header nav a { color: #fff; margin-right: 1.25rem; text-decoration: none; font-size: 0.95rem; }
-        header nav a:hover { text-decoration: underline; }
-        main { padding: 2rem; max-width: 960px; margin: 0 auto; }
-        h1 { margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; background: #fff; }
-        th, td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e0e0e0; text-align: left; }
-        th { background: #fafafa; }
-        .btn { display: inline-block; padding: 0.45rem 0.9rem; background: #2c3e50; color: #fff; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 0.9rem; }
-        .btn:hover { background: #1f2d3a; }
-        .btn-danger { background: #c0392b; }
-        .btn-danger:hover { background: #992d22; }
-        .btn-small { padding: 0.25rem 0.6rem; font-size: 0.82rem; }
-        .actions { margin-bottom: 1.25rem; }
-        .messages { list-style: none; padding: 0; }
-        .messages li { padding: 0.6rem 1rem; background: #d4edda; color: #155724; margin-bottom: 0.6rem; border-radius: 4px; }
-        .messages li.error { background: #f8d7da; color: #721c24; }
-        form p { margin: 0.6rem 0; }
-        form input[type=text], form input[type=number], form textarea, form select {
-            width: 100%; padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px;
-        }
-        .filtros { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1.25rem; }
-        .filtros input[type=text] { flex: 1 1 220px; width: auto; }
-        .filtros select { flex: 0 1 220px; width: auto; }
-        .card { background: #fff; padding: 1.25rem 1.5rem; border-radius: 6px; margin-bottom: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.78rem; }
-        .badge-aberta { background: #fff3cd; color: #856404; }
-        .badge-fechada { background: #d4edda; color: #155724; }
-        .total { font-size: 1.3rem; font-weight: bold; }
-        header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem; }
-        .usuario { color: #cfd8dc; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
-        .usuario form { margin: 0; }
-        .btn-link { background: none; border: none; color: #fff; text-decoration: underline; cursor: pointer; font-size: 0.85rem; padding: 0; }
-        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
-        .kpi { background: #fff; border-radius: 6px; padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .kpi small { display: block; color: #666; margin-bottom: 0.3rem; }
-        .kpi strong { font-size: 1.5rem; }
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
-        .errorlist { color: #c0392b; list-style: none; padding: 0; margin: 0.3rem 0; }
-        .inline { display: inline; }
-    </style>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%BD%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="{% static 'css/estilo.css' %}">
 </head>
 <body>
-    <header>
-        <nav>
-            {% if user.perfil %}
-            <a href="{% url 'dashboard' %}">Dashboard</a>
-            <a href="{% url 'prato_list' %}">Pratos</a>
-            <a href="{% url 'combo_list' %}">Combos</a>
-            <a href="{% url 'mesa_list' %}">Mesas</a>
-            <a href="{% url 'comanda_list' %}">Comandas</a>
-            <a href="{% url 'cardapio_publico' user.perfil.organizacao.slug %}">Cardapio publico</a>
+    <header class="topo">
+        <div class="topo-interno">
+            <a class="marca" href="{% url 'inicio' %}">&#127869;&#65039; Cardapio Digital</a>
+            <nav class="menu">
+                {% with atual=request.resolver_match.url_name %}
+                {% if user.perfil %}
+                <a href="{% url 'dashboard' %}" class="{% if atual == 'dashboard' %}ativo{% endif %}">Dashboard</a>
+                <a href="{% url 'prato_list' %}" class="{% if 'prato' in atual %}ativo{% endif %}">Pratos</a>
+                <a href="{% url 'combo_list' %}" class="{% if 'combo' in atual %}ativo{% endif %}">Combos</a>
+                <a href="{% url 'mesa_list' %}" class="{% if 'mesa' in atual %}ativo{% endif %}">Mesas</a>
+                <a href="{% url 'comanda_list' %}" class="{% if 'comanda' in atual or 'item' in atual %}ativo{% endif %}">Comandas</a>
+                <a href="{% url 'cardapio_publico' user.perfil.organizacao.slug %}" class="{% if atual == 'cardapio_publico' %}ativo{% endif %}">Cardapio publico</a>
+                {% endif %}
+                {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
+                {% endwith %}
+            </nav>
+            {% if user.is_authenticated %}
+            <div class="usuario">
+                <span>{{ user.username }}{% if user.perfil %} &middot; {{ user.perfil.organizacao }} <span class="papel">{{ user.perfil.get_papel_display }}</span>{% endif %}</span>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-link">Sair</button>
+                </form>
+            </div>
             {% endif %}
-            {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
-        </nav>
-        {% if user.is_authenticated %}
-        <div class="usuario">
-            <span>{{ user.username }}{% if user.perfil %} &middot; {{ user.perfil.organizacao }} ({{ user.perfil.get_papel_display }}){% endif %}</span>
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn-link">Sair</button>
-            </form>
         </div>
-        {% endif %}
     </header>
     <main>
         {% if messages %}

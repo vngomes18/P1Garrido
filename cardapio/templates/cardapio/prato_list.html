@@ -37,7 +37,7 @@
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">{% if filtrando %}Nenhum prato encontrado para os filtros informados.{% else %}Nenhum prato cadastrado.{% endif %}</td></tr>
+        <tr><td colspan="5" class="vazio">{% if filtrando %}Nenhum prato encontrado para os filtros informados.{% else %}Nenhum prato cadastrado.{% endif %}</td></tr>
         {% endfor %}
     </tbody>
 </table>

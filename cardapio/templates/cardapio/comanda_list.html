@@ -29,7 +29,7 @@
             <td><a class="btn btn-small" href="{% url 'comanda_detail' comanda.pk %}">Ver</a></td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">Nenhuma comanda encontrada.</td></tr>
+        <tr><td colspan="6" class="vazio">Nenhuma comanda encontrada.</td></tr>
         {% endfor %}
     </tbody>
 </table>

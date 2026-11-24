@@ -17,6 +17,7 @@
                 datasets: [{ label: 'Faturamento', data: porMes.map((d) => d.total), backgroundColor: '#2c3e50' }],
             },
             options: {
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => moeda(c.parsed.y) } } },
                 scales: { y: { beginAtZero: true, ticks: { callback: (v) => moeda(v) } } },
             },
@@ -33,6 +34,7 @@
                 datasets: [{ label: 'Itens vendidos', data: porCategoria.map((d) => d.total), backgroundColor: '#3a7ca5' }],
             },
             options: {
+                maintainAspectRatio: false,
                 indexAxis: 'y',
                 plugins: { legend: { display: false } },
                 scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
