@@ -1,0 +1,140 @@
+/* Cardapio Digital - estilo geral. Sem framework: CSS puro, com variaveis para trocar a identidade em um lugar so. */
+
+:root {
+    --fundo: #f6f5f2;
+    --superficie: #ffffff;
+    --texto: #1f2937;
+    --suave: #6b7280;
+    --borda: #e5e7eb;
+    --primaria: #1f2937;
+    --destaque: #c2410c;
+    --destaque-escuro: #9a3412;
+    --destaque-claro: #fff1e8;
+    --ok: #166534;       --ok-fundo: #dcfce7;
+    --aviso: #92400e;    --aviso-fundo: #fef3c7;
+    --erro: #b91c1c;     --erro-fundo: #fee2e2;
+    --raio: 12px;
+    --sombra: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.5;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+h1 { margin: 0 0 1.25rem; font-size: 1.75rem; letter-spacing: -.01em; }
+h2 { margin: 0 0 .9rem; font-size: 1.1rem; }
+a { color: var(--destaque); }
+:focus-visible { outline: 3px solid #fdba74; outline-offset: 2px; }
+
+/* ---------- Topo ---------- */
+.topo { background: var(--primaria); color: #fff; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
+.topo-interno { max-width: 1040px; margin: 0 auto; padding: .7rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.5rem; }
+.marca { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
+.menu { display: flex; gap: .25rem; order: 3; flex: 1 1 100%; overflow-x: auto; padding-bottom: .15rem; }
+.menu a { color: #d1d5db; text-decoration: none; font-size: .92rem; padding: .4rem .75rem; border-radius: 8px; white-space: nowrap; }
+.menu a:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.menu a.ativo { background: var(--destaque); color: #fff; }
+.usuario { display: flex; align-items: center; gap: .75rem; margin-left: auto; font-size: .85rem; color: #d1d5db; }
+.usuario form { margin: 0; }
+.usuario .papel { background: rgba(255, 255, 255, .15); color: #fff; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; }
+.btn-link { background: none; border: 1px solid rgba(255, 255, 255, .35); color: #fff; border-radius: 8px; padding: .25rem .7rem; font-size: .82rem; cursor: pointer; }
+.btn-link:hover { background: rgba(255, 255, 255, .12); }
+
+main { max-width: 1040px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+
+/* ---------- Mensagens ---------- */
+.messages { list-style: none; padding: 0; margin: 0 0 1.25rem; }
+.messages li { padding: .7rem 1rem; margin-bottom: .6rem; border-radius: 8px; background: var(--ok-fundo); color: var(--ok); border-left: 4px solid var(--ok); }
+.messages li.error { background: var(--erro-fundo); color: var(--erro); border-left-color: var(--erro); }
+.errorlist { list-style: none; padding: 0; margin: .25rem 0; color: var(--erro); font-size: .88rem; }
+
+/* ---------- Cartoes ---------- */
+.card { background: var(--superficie); padding: 1.25rem 1.5rem; border-radius: var(--raio); margin-bottom: 1.25rem; box-shadow: var(--sombra); }
+.card > :last-child { margin-bottom: 0; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.kpi { position: relative; overflow: hidden; background: var(--superficie); border-radius: var(--raio); padding: 1rem 1.25rem 1rem 1.5rem; box-shadow: var(--sombra); }
+.kpi::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--destaque); }
+.kpi small { display: block; color: var(--suave); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem; }
+.kpi strong { font-size: 1.7rem; line-height: 1.2; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.grid-2 .card { margin-bottom: 0; }
+.grafico { position: relative; height: 300px; }
+
+/* ---------- Tabelas ---------- */
+table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden; }
+.card table { box-shadow: none; border: 1px solid var(--borda); }
+th, td { padding: .7rem 1rem; text-align: left; border-bottom: 1px solid var(--borda); }
+th { background: #faf9f7; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #fcfbfa; }
+td.vazio { text-align: center; color: var(--suave); padding: 2.25rem 1rem; }
+td.vazio::before { content: "\1F37D\FE0F"; display: block; font-size: 1.6rem; margin-bottom: .35rem; }
+
+/* ---------- Botoes ---------- */
+.btn { display: inline-block; padding: .55rem 1.1rem; background: var(--destaque); color: #fff; text-decoration: none; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-size: .92rem; font-weight: 600; }
+.btn:hover { background: var(--destaque-escuro); }
+.btn-small { padding: .3rem .75rem; font-size: .82rem; font-weight: 500; background: var(--superficie); color: var(--texto); border-color: #d1d5db; }
+.btn-small:hover { background: #f3f4f6; }
+.btn-danger { background: var(--erro); }
+.btn-danger:hover { background: #991b1b; }
+.btn-danger.btn-small { background: var(--superficie); color: var(--erro); border-color: #fca5a5; }
+.btn-danger.btn-small:hover { background: var(--erro-fundo); }
+.actions { margin-bottom: 1.25rem; }
+.inline { display: inline; }
+td .btn, td form { margin-right: .25rem; }
+
+/* ---------- Formularios e filtros ---------- */
+form p { margin: 0 0 1rem; }
+form label { display: block; font-weight: 600; font-size: .88rem; margin-bottom: .3rem; }
+form input[type=text], form input[type=number], form input[type=password], form input[type=date], form textarea, form select {
+    width: 100%; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; font: inherit;
+}
+form input:focus, form textarea:focus, form select:focus { border-color: var(--destaque); outline: 3px solid #fed7aa; outline-offset: 0; }
+form textarea { min-height: 5.5rem; resize: vertical; }
+form input[type=checkbox] { width: auto; margin-right: .4rem; }
+form label:has(> input[type=checkbox]) { font-weight: 400; display: flex; align-items: center; }
+.helptext { display: block; color: var(--suave); font-size: .8rem; margin-top: .2rem; }
+
+.filtros { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: 1.25rem; background: var(--superficie); padding: .8rem 1rem; border-radius: var(--raio); box-shadow: var(--sombra); }
+.filtros label { display: inline; margin: 0; color: var(--suave); }
+.filtros input[type=text] { flex: 1 1 220px; width: auto; }
+.filtros select, .filtros input[type=date] { flex: 0 1 200px; width: auto; }
+
+/* ---------- Selos e totais ---------- */
+.badge { display: inline-block; padding: .15rem .6rem; border-radius: 999px; font-size: .76rem; font-weight: 600; }
+.badge-aberta { background: var(--aviso-fundo); color: var(--aviso); }
+.badge-fechada { background: var(--ok-fundo); color: var(--ok); }
+.total { font-size: 1.5rem; font-weight: 700; text-align: right; }
+
+/* ---------- Login ---------- */
+.login-box { max-width: 400px; margin: 2rem auto; }
+.login-box h1 { text-align: center; }
+.login-box .btn { width: 100%; padding: .7rem; }
+
+/* ---------- Cardapio publico (QR code da mesa) ---------- */
+.hero { background: var(--primaria); color: #fff; border-radius: var(--raio); padding: 2rem 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+.hero h1 { margin: 0; color: #fff; }
+.hero p { margin: .4rem 0 0; color: #d1d5db; }
+.itens { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.item-cardapio { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 1rem 1.1rem; display: flex; justify-content: space-between; gap: 1rem; }
+.item-cardapio h3 { margin: 0 0 .2rem; font-size: 1rem; }
+.item-cardapio p { margin: 0; color: var(--suave); font-size: .88rem; }
+.item-cardapio .preco { font-weight: 700; color: var(--destaque); white-space: nowrap; }
+.nota { color: var(--suave); font-size: .85rem; }
+
+/* ---------- Telas pequenas ---------- */
+@media (max-width: 640px) {
+    h1 { font-size: 1.45rem; }
+    main { padding: 1.25rem .85rem 2.5rem; }
+    main > table { display: block; overflow-x: auto; }
+    .filtros select, .filtros input[type=date] { flex: 1 1 140px; }
+    .grafico { height: 260px; }
+}

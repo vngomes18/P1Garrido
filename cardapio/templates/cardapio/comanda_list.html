@@ -1,0 +1,43 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Comandas{% endblock %}
+{% block content %}
+<h1>Comandas</h1>
+<form method="get" class="filtros">
+    <select name="status">
+        <option value="">Todos os status</option>
+        {% for valor, rotulo in status_opcoes %}
+        <option value="{{ valor }}" {% if status_atual == valor %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filtrar</button>
+    {% if status_atual %}<a class="btn btn-small" href="{% url 'comanda_list' %}">Limpar</a>{% endif %}
+</form>
+<table>
+    <thead>
+        <tr><th>#</th><th>Mesa</th><th>Status</th><th>Aberta em</th><th>Total</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for comanda in comandas %}
+        <tr>
+            <td>{{ comanda.pk }}</td>
+            <td>{{ comanda.mesa }}</td>
+            <td>
+                {% if comanda.status == 'ABERTA' %}<span class="badge badge-aberta">Aberta</span>{% else %}<span class="badge badge-fechada">Fechada</span>{% endif %}
+            </td>
+            <td>{{ comanda.aberta_em|date:"d/m/Y H:i" }}</td>
+            <td>{% if comanda.status == 'FECHADA' %}R$ {{ comanda.total }}{% else %}-{% endif %}</td>
+            <td><a class="btn btn-small" href="{% url 'comanda_detail' comanda.pk %}">Ver</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="vazio">Nenhuma comanda encontrada.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if is_paginated %}
+<p>
+    {% if page_obj.has_previous %}<a class="btn btn-small" href="?page={{ page_obj.previous_page_number }}{% if status_atual %}&status={{ status_atual }}{% endif %}">&laquo; Anterior</a>{% endif %}
+    Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    {% if page_obj.has_next %}<a class="btn btn-small" href="?page={{ page_obj.next_page_number }}{% if status_atual %}&status={{ status_atual }}{% endif %}">Proxima &raquo;</a>{% endif %}
+</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'cardapio/base.html' %}
+{% block title %}Acesso negado{% endblock %}
+{% block content %}
+<h1>Acesso negado</h1>
+<div class="card">
+    <p>{% if exception %}{{ exception }}{% else %}Voce nao tem permissao para acessar esta pagina.{% endif %}</p>
+    {% if user.is_authenticated and not user.perfil %}
+    <p>Seu usuario ainda nao esta vinculado a uma organizacao. Peca ao administrador do sistema para criar o seu <strong>Perfil</strong> no painel administrativo.</p>
+    {% endif %}
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'logout' %}" style="display:inline">
+        {% csrf_token %}
+        <button class="btn" type="submit">Sair</button>
+    </form>
+    {% if user.is_staff %}<a class="btn" href="/admin/">Painel administrativo</a>{% endif %}
+    {% endif %}
+</div>
+{% endblock %}

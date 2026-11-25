@@ -2,9 +2,11 @@
 {% block title %}Pratos{% endblock %}
 {% block content %}
 <h1>Pratos</h1>
+{% if user.perfil.eh_admin %}
 <div class="actions">
     <a class="btn" href="{% url 'prato_create' %}">+ Novo prato</a>
 </div>
+{% endif %}
 <form method="get" class="filtros">
     <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nome do prato">
     <select name="categoria">
@@ -28,12 +30,14 @@
             <td>R$ {{ prato.preco }}</td>
             <td>{% if prato.disponivel %}Sim{% else %}Nao{% endif %}</td>
             <td>
+                {% if user.perfil.eh_admin %}
                 <a class="btn btn-small" href="{% url 'prato_update' prato.pk %}">Editar</a>
                 <a class="btn btn-small btn-danger" href="{% url 'prato_delete' prato.pk %}">Excluir</a>
+                {% endif %}
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">{% if filtrando %}Nenhum prato encontrado para os filtros informados.{% else %}Nenhum prato cadastrado.{% endif %}</td></tr>
+        <tr><td colspan="5" class="vazio">{% if filtrando %}Nenhum prato encontrado para os filtros informados.{% else %}Nenhum prato cadastrado.{% endif %}</td></tr>
         {% endfor %}
     </tbody>
 </table>
